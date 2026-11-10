@@ -765,7 +765,8 @@ const PS={ctrl:null,view:"loading",picks:[],err:"",busy:false};
 const pOpts=g=>((PS.ctrl&&PS.ctrl.options)||[]).filter(o=>g==null||o.group===g);
 const pMax=g=>Math.min(((PS.ctrl&&PS.ctrl.picks)||{})[g]||3,pOpts(g).length);
 const pChosen=g=>PS.picks.filter(id=>pOpts(g).some(o=>o.id===id)).length;
-const pComplete=()=>GKEYS.every(g=>pChosen(g)===pMax(g));
+/* at least 1 and at most max picks per list. Points follow the order: 1st gets max, 2nd max-1 and so on */
+const pComplete=()=>GKEYS.every(g=>pChosen(g)>=1&&pChosen(g)<=pMax(g));
 const pNoun=(g,n)=>n===1?GROUPS[g].one:GROUPS[g].many;
 function voterId(){let v=lsGet("pp-voter");if(!v){v=uid("v")+Math.random().toString(36).slice(2,8);lsSet("pp-voter",v);}return v;}
 function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}
@@ -853,12 +854,12 @@ function rp(){
   else{
     /* order differs per phone to avoid position bias */
     const sec=g=>{const opts=shuffled(pOpts(g),voterId()+P_BIN+g),max=pMax(g),n=pChosen(g);if(!opts.length)return "";
-      return `<div class="p-sec"><div class="p-lead"><span>Pick your favourite ${max} ${pNoun(g,max)}<span class="p-sub">Tap in order. Your first tap is your favourite</span></span><span class="p-count${n===max?" ok":""}">${n} of ${max}</span></div>
+      return `<div class="p-sec"><div class="p-lead"><span>Pick 1 to ${max} ${GROUPS[g].many}<span class="p-sub">Tap in order. Your first tap is your favourite</span></span><span class="p-count${n>=1?" ok":""}">${n} of ${max}</span></div>
         ${opts.map(o=>{const on=PS.picks.includes(o.id);return `<button class="p-opt${on?" on":""}" data-pa="pick" data-id="${esc(o.id)}" aria-pressed="${on}">
           <span class="p-check">${on?PS.picks.filter(x=>pOpts(g).some(p=>p.id===x)).indexOf(o.id)+1:""}</span><span class="p-text"><span class="${g==="tagline"?"p-tag":"p-ptext"}">${esc(o.text||"Option "+o.code)}</span></span></button>`;}).join("")}</div>`;};
-    const need=GKEYS.filter(g=>pChosen(g)!==pMax(g));
+    const need=GKEYS.filter(g=>pChosen(g)<1);
     h=`${err}${GKEYS.map(sec).join("")}
-      <div class="p-submit"><span class="muted small">${need.length?"Pick your "+need.map(g=>GROUPS[g].many).join(" and ")+" to send":"Ready to send"}</span>
+      <div class="p-submit"><span class="muted small">${need.length?"Pick at least one "+need.map(g=>GROUPS[g].one).join(" and one ")+" to send":"Ready to send"}</span>
         <button class="btn primary" data-pa="submit"${need.length||PS.busy?" disabled":""}>${PS.busy?"Sending":"Send vote"}</button></div>`;
   }
   page.innerHTML=`<div class="p-wrap">${h}</div>`;
