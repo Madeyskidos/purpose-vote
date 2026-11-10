@@ -42,60 +42,155 @@
 -->
 <script type="application/json" id="ws-flow">
 {
- "id": "ws-purpose-vote-2026-11-10-v2",
+ "id": "ws-purpose-vote-2026-11-10-v3",
  "meta": {
   "title": "Purpose and tagline vote",
-  "sub": "Client, date",
+  "sub": "Project Keystone",
   "lang": "en"
  },
  "items": [
   {
-   "name": "Placeholder tagline A",
+   "name": "Built by entrepreneurs",
    "group": "tagline",
    "on": true
   },
   {
-   "name": "Placeholder tagline B",
+   "name": "Built by you. Lasting with us",
    "group": "tagline",
    "on": true
   },
   {
-   "name": "Placeholder tagline C",
+   "name": "Built by you. Stronger with us",
    "group": "tagline",
    "on": true
   },
   {
-   "name": "Placeholder tagline D",
+   "name": "For Business Builders. We get it.",
    "group": "tagline",
    "on": true
   },
   {
-   "name": "Placeholder tagline E",
+   "name": "Where specialists build resilience",
    "group": "tagline",
    "on": true
   },
   {
-   "name": "Placeholder purpose statement 1. Replace with the draft wording.",
+   "name": "Specialist at heart. Resilient by design.",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "A lasting home for leading niche technology companies",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Niche technologies. Essential infrastructure. Lasting ownership.",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Niche companies. Lasting value",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Niche specialists. Important impact.",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Expanding Excellence",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Elevating Excellence",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Technology for a better tomorrow",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Innovating for a better and safer future",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Shaping the future through technology",
+   "group": "tagline",
+   "on": true
+  },
+  {
+   "name": "Niche infrastructure technologies creating sustainable and safe societies.",
    "group": "purpose",
    "on": true
   },
   {
-   "name": "Placeholder purpose statement 2. Replace with the draft wording.",
+   "name": "Niche infrastructure solutions building sustainable and safe societies.",
    "group": "purpose",
    "on": true
   },
   {
-   "name": "Placeholder purpose statement 3. Replace with the draft wording.",
+   "name": "Niche infrastructure technology companies creating sustainable, resilient and safe societies.",
    "group": "purpose",
    "on": true
   },
   {
-   "name": "Placeholder purpose statement 4. Replace with the draft wording.",
+   "name": "We back niche infrastructure technology companies that create sustainable, resilient and safe societies.",
    "group": "purpose",
    "on": true
   },
   {
-   "name": "Placeholder purpose statement 5. Replace with the draft wording.",
+   "name": "Leading niche infrastructure group making a difference to the world.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "We empower entrepreneurial niche technology companies to grow and develop, contributing to a safer and more sustainable society.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "We own and develop leading niche technology companies that make infrastructure and industry safer and more efficient, as a long-term home where entrepreneurs keep building.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "We acquire and grow specialised companies whose technologies keep infrastructure and industry running safely and we preserve what made them successful.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "Through our specialist companies, we build a more resilient society. As an infrastructure technology group, we acquire and develop niche businesses. Each business stays entrepreneurial and close to its market, supported by a group that understands it.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "Through our specialist companies, we build a more resilient society. As an infrastructure technology group, we acquire and develop niche businesses. Decisions are made close to customers and markets, backed by a group that knows the industry from the inside.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "Keystone is the long-term home for entrepreneur-led businesses in critical infrastructure. Built on decentralization, trust and accountability, we create sustainable and safe societies with lasting value.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "To invest and develop innovative niche technologies that solve complex challenges, create lasting value and enable a smarter and safer future.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "Turning innovation into technology that makes a meaningful difference to people, businesses and communities.",
+   "group": "purpose",
+   "on": true
+  },
+  {
+   "name": "To develop and invest in innovative technologies that solve real-world challenges and create lasting value for people, businesses and communities.",
    "group": "purpose",
    "on": true
   }
@@ -103,8 +198,8 @@
  "data": {
   "options": {
    "picks": {
-    "tagline": 2,
-    "purpose": 2
+    "tagline": 3,
+    "purpose": 3
    }
   }
  }
@@ -302,6 +397,7 @@ body.participant .ws-title input{pointer-events:none}
 .p-count{font-size:13px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .p-count.ok{color:var(--ok)}
 .p-ptext{font-size:15px}
+.p-sub{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px}
 .rank-ptext{font-size:15px}
 .p-opt{display:flex;gap:14px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:0 0 10px;cursor:pointer}
 .p-opt.on{border-color:var(--night);box-shadow:inset 0 0 0 1px var(--night)}
@@ -393,16 +489,17 @@ function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
 
 /* ================================================================================================
    WORKSHOP TABS: purpose statement vote. Options, Vote (live poll), Ranking.
-   Each option is a tagline plus a purpose statement. Participants pick their favourite N (default 2).
+   Taglines and purpose statements are voted on separately. Participants tap their favourite N in order (default 3).
+   Points: N for the first choice, N-1 for the second and so on (3/2/1).
    ================================================================================================ */
 const GROUPS={tagline:{title:"Taglines",one:"tagline",many:"taglines",ph:"Tagline"},purpose:{title:"Purpose statements",one:"purpose statement",many:"purpose statements",ph:"Purpose statement"}};
 const GKEYS=["tagline","purpose"];
 const LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const inGroup=g=>S.items.filter(i=>i.group===g);
-const codeOf=it=>{const k=inGroup(it.group).indexOf(it);return it.group==="purpose"?String(k+1):(LETTERS[k]||"?");};
+const codeOf=it=>{const k=inGroup(it.group).indexOf(it);return (it.group==="purpose"?"P":"T")+(k+1);};
 const included=g=>S.items.filter(i=>i.on!==false&&(g==null||i.group===g));
 const pollData=()=>{const P=dataOf("vote");P.status=P.status||"idle";P.votes=P.votes||{};return P;};
-const picksAllowed=g=>{const p=dataOf("options").picks||{};return Math.max(1,Math.min(Math.round(Number(p[g])||2),Math.max(1,included(g).length)));};
+const picksAllowed=g=>{const p=dataOf("options").picks||{};return Math.max(1,Math.min(Math.round(Number(p[g])||3),Math.max(1,included(g).length)));};
 
 /* ---------- Storage: jsonbin.io (Route A), or a local demo store when the key is "demo" ---------- */
 const JB="https://api.jsonbin.io/v3";
@@ -473,11 +570,15 @@ function scheduleSync(){
 document.addEventListener("visibilitychange",scheduleSync);
 
 /* ---------- Tally ---------- */
+/* Weighted tally. A vote is an ordered list of ids. Within each group the first pick gets N points, the next N-1 and so on (N = picks allowed). */
 function tally(g){
-  const P=pollData(),opts=included(g),count={};opts.forEach(o=>count[o.id]=0);
+  const P=pollData(),opts=included(g),count={},firsts={},named={};opts.forEach(o=>{count[o.id]=0;firsts[o.id]=0;named[o.id]=0;});
   const voters=Object.values(P.votes||{});
-  voters.forEach(v=>(v.a||[]).forEach(id=>{if(id in count)count[id]++;}));
-  const rows=opts.map(o=>({o,n:count[o.id]})).sort((a,b)=>b.n-a.n||S.items.indexOf(a.o)-S.items.indexOf(b.o));
+  voters.forEach(v=>GKEYS.forEach(k=>{
+    const mine=(v.a||[]).filter(id=>id in count&&(itemById(id)||{}).group===k),N=picksAllowed(k);
+    mine.forEach((id,ix)=>{count[id]+=Math.max(1,N-ix);named[id]++;if(ix===0)firsts[id]++;});
+  }));
+  const rows=opts.map(o=>({o,n:count[o.id],first:firsts[o.id],named:named[o.id]})).sort((a,b)=>b.n-a.n||b.first-a.first||S.items.indexOf(a.o)-S.items.indexOf(b.o));
   let rank=0,prev=null;rows.forEach((r,i)=>{if(r.n!==prev){rank=i+1;prev=r.n;}r.rank=rank;});
   return {rows,voters:voters.length,total:rows.reduce((s,r)=>s+r.n,0)};
 }
@@ -491,7 +592,7 @@ const TABS=[
     lead:"Taglines and purpose statements the room votes on",
     render(d){
       const P=pollData();
-      d.picks=d.picks||{tagline:2,purpose:2};
+      d.picks=d.picks||{tagline:3,purpose:3};
       const card=g=>{
         const G=GROUPS[g],list=inGroup(g);
         const rows=list.map(it=>`<tr class="${it.on===false?"off":""}">
@@ -619,7 +720,7 @@ const TABS=[
   {
     id:"ranking",
     title:"Ranking",
-    lead:"Most voted to least voted",
+    lead:"Most points to fewest. 3 points for a first choice, 2 for second, 1 for third",
     render(){
       const P=pollData(),T=tally();
       const status=P.status==="open"?pill("Live","sage"):P.status==="closed"?pill("Final","clay"):pill("Not started","mist");
@@ -632,14 +733,14 @@ const TABS=[
               <div class="row" style="gap:8px;flex-wrap:nowrap;align-items:flex-start"><span class="pill outline">${codeOf(r.o)}</span><span class="${g==="tagline"?"rank-tag":"rank-ptext"}">${esc(r.o.name||"Untitled")}</span></div>
               ${bar(r.n/max,i===0&&r.n>0)}
             </div>
-            <div class="rank-n"><span class="v">${r.n}</span><span class="small muted">${T.voters?pct(r.n/T.voters):"–"} of voters</span></div>
+            <div class="rank-n"><span class="v">${r.n}</span><span class="small muted">points</span><span class="small muted">${r.named} ${r.named===1?"pick":"picks"}, ${r.first} first</span></div>
           </div>`).join(""):`<div class="empty">No ${GROUPS[g].many} yet</div>`}
         </div>`;
       };
       return `${kpis([{label:"Voters",value:T.voters},{label:"Status",value:status}])}
         <div class="grid-2">${card("tagline")}${card("purpose")}</div>`;
     },
-    summary(){return GKEYS.flatMap(g=>[GROUPS[g].title,...tally(g).rows.map(r=>`${r.rank}. ${codeOf(r.o)}  ${r.o.name}: ${r.n} votes`)]);}
+    summary(){return GKEYS.flatMap(g=>[GROUPS[g].title,...tally(g).rows.map(r=>`${r.rank}. ${codeOf(r.o)}  ${r.o.name}: ${r.n} points, ${r.named} ${r.named===1?"pick":"picks"}, ${r.first} first`)]);}
   }
 ];
 /* ===================== END WORKSHOP TABS ===================== */
@@ -662,7 +763,7 @@ const PM=(()=>{
 const PART=!!PM;
 const PS={ctrl:null,view:"loading",picks:[],err:"",busy:false};
 const pOpts=g=>((PS.ctrl&&PS.ctrl.options)||[]).filter(o=>g==null||o.group===g);
-const pMax=g=>Math.min(((PS.ctrl&&PS.ctrl.picks)||{})[g]||2,pOpts(g).length);
+const pMax=g=>Math.min(((PS.ctrl&&PS.ctrl.picks)||{})[g]||3,pOpts(g).length);
 const pChosen=g=>PS.picks.filter(id=>pOpts(g).some(o=>o.id===id)).length;
 const pComplete=()=>GKEYS.every(g=>pChosen(g)===pMax(g));
 const pNoun=(g,n)=>n===1?GROUPS[g].one:GROUPS[g].many;
@@ -752,9 +853,9 @@ function rp(){
   else{
     /* order differs per phone to avoid position bias */
     const sec=g=>{const opts=shuffled(pOpts(g),voterId()+P_BIN+g),max=pMax(g),n=pChosen(g);if(!opts.length)return "";
-      return `<div class="p-sec"><div class="p-lead"><span>Pick your favourite ${max} ${pNoun(g,max)}</span><span class="p-count${n===max?" ok":""}">${n} of ${max}</span></div>
+      return `<div class="p-sec"><div class="p-lead"><span>Pick your favourite ${max} ${pNoun(g,max)}<span class="p-sub">Tap in order. Your first tap is your favourite</span></span><span class="p-count${n===max?" ok":""}">${n} of ${max}</span></div>
         ${opts.map(o=>{const on=PS.picks.includes(o.id);return `<button class="p-opt${on?" on":""}" data-pa="pick" data-id="${esc(o.id)}" aria-pressed="${on}">
-          <span class="p-check">${on?"✓":""}</span><span class="p-text"><span class="${g==="tagline"?"p-tag":"p-ptext"}">${esc(o.text||"Option "+o.code)}</span></span></button>`;}).join("")}</div>`;};
+          <span class="p-check">${on?PS.picks.filter(x=>pOpts(g).some(p=>p.id===x)).indexOf(o.id)+1:""}</span><span class="p-text"><span class="${g==="tagline"?"p-tag":"p-ptext"}">${esc(o.text||"Option "+o.code)}</span></span></button>`;}).join("")}</div>`;};
     const need=GKEYS.filter(g=>pChosen(g)!==pMax(g));
     h=`${err}${GKEYS.map(sec).join("")}
       <div class="p-submit"><span class="muted small">${need.length?"Pick your "+need.map(g=>GROUPS[g].many).join(" and ")+" to send":"Ready to send"}</span>
