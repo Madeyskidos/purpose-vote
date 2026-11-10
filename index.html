@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Purpose vote</title>
+<meta name="referrer" content="no-referrer">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -451,7 +452,7 @@ async function run(fn){
   finally{BUSY=false;save();renderPage();scheduleSync();}
 }
 /* Link uses only letters, digits, dot, dash and underscore, so phone cameras and browsers cannot rewrite it */
-function joinLink(P){return location.href.split("#")[0].split("?")[0]+"#vote="+P.ctrl+"."+P.bin+"."+b64u(P.pkey);}
+function joinLink(P){return location.origin+location.pathname+"?v="+P.ctrl+"."+P.bin+"."+b64u(P.pkey);}
 async function pushCtrl(P){
   const rec={v:1,title:S.meta.title,sub:S.meta.sub,open:P.status==="open",round:P.round||1,picks:{tagline:picksAllowed("tagline"),purpose:picksAllowed("purpose")},
     options:included().map(i=>({id:i.id,group:i.group,code:codeOf(i),text:i.name||""})),at:Date.now()};
@@ -647,14 +648,17 @@ const TABS=[
 /* ===================== PARTICIPANT VIEW (URL ends in #poll=<control bin>,<vote bin>|<access key>) ===================== */
 function b64u(s){return btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
 function unb64u(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";return decodeURIComponent(escape(atob(s)));}
-/* Any link that looks like a poll link opens the participant view. If it cannot be read, the phone shows an error, never the facilitator view. */
+/* The plain address is the phone view. The facilitator view opens only with ?admin (or #admin).
+   Poll details travel in ?v=<control>.<votes>.<key in base64url>: scanners keep the query string and each poll gets a fresh address. */
+const ADMIN=/(^|[?&])admin(=|&|$)/i.test(location.search.slice(1))||/^#admin$/i.test(location.hash);
 const PM=(()=>{
+  const parse=v=>{const m=(v||"").match(/^([A-Za-z0-9]+)\.([A-Za-z0-9]+)\.([A-Za-z0-9_-]+)$/);if(!m)return null;try{return {ctrl:m[1],bin:m[2],key:unb64u(m[3])};}catch(e){return null;}};
+  let q=null;try{q=new URLSearchParams(location.search).get("v");}catch(e){}
+  if(q!=null)return parse(q)||{bad:true};
   let h=location.hash||"";try{h=decodeURIComponent(h);}catch(e){}
-  let m=h.match(/^#vote=([A-Za-z0-9]+)\.([A-Za-z0-9]+)\.([A-Za-z0-9_-]+)$/);
-  if(m){try{return {ctrl:m[1],bin:m[2],key:unb64u(m[3])};}catch(e){return {bad:true};}}
-  m=h.match(/^#poll=([^,|]+),([^|]+)\|(.+)$/);
-  if(m)return {ctrl:m[1],bin:m[2],key:m[3]};
-  return /^#\s*(vote|poll)/i.test(h)?{bad:true}:null;
+  let m=h.match(/^#vote=(.+)$/);if(m)return parse(m[1])||{bad:true};
+  m=h.match(/^#poll=([^,|]+),([^|]+)\|(.+)$/);if(m)return {ctrl:m[1],bin:m[2],key:m[3]};
+  return ADMIN?null:{bad:true,none:true};
 })();
 const PART=!!PM;
 const PS={ctrl:null,view:"loading",picks:[],err:"",busy:false};
@@ -686,7 +690,7 @@ const P_CTRL=PM&&PM.ctrl,P_BIN=PM&&PM.bin,P_KEY=(PM&&PM.key)||"";
 const draftKey=()=>"pp-draft:"+P_BIN+":"+((PS.ctrl&&PS.ctrl.round)||1);
 const sentKey=()=>"pp-sent:"+P_BIN+":"+((PS.ctrl&&PS.ctrl.round)||1);
 async function partLoad(){
-  if(PM.bad){PS.view="error";PS.err="This link is incomplete. Scan the code again.";rp();return;}
+  if(PM.bad){PS.view="nolink";rp();return;}
   PS.view="loading";PS.err="";rp();
   try{
     PS.ctrl=await readBin(P_CTRL,{access:P_KEY});
@@ -740,6 +744,7 @@ function rp(){
   const err=PS.err?`<div class="hint err">${esc(PS.err)}</div>`:"";
   let h="";
   if(PS.view==="loading")h=`<div class="empty">Loading</div>`;
+  else if(PS.view==="nolink")h=`<div class="card p-msg"><h2>${PM.none?"Scan the QR code to vote":"This link is incomplete"}</h2><p class="muted">${PM.none?"Use the code on the screen in the room.":"Scan the code on the screen again."}</p></div>`;
   else if(PS.view==="error")h=`${err}<div class="card p-msg"><h2>Could not load the poll</h2><p class="muted">Check your connection and try again.</p><button class="btn primary" data-pa="reload">Try again</button></div>`;
   else if(PS.view==="waiting")h=`${err}<div class="card p-msg"><h2>${lsGet(sentKey())?"Thanks for voting":"The poll is not open"}</h2><p class="muted">Wait for the facilitator, then tap below.</p><button class="btn primary" data-pa="reload">Check again</button></div>`;
   else if(PS.view==="done")h=c&&!c.open
