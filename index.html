@@ -591,7 +591,6 @@ const TABS=[
           /* Never fall back to the master key */
           if(!pkey)throw new Error("No participant key was created. Poll not created.");
           if(pkey===master)throw new Error("The participant key equals the master key. Poll not created.");
-          if(/^\$2a\$/.test(pkey))P.warn="The participant key starts with $2a$. Check in jsonbin that it is an access key and not the master key before sharing the link.";
           P.pkey=pkey;save();
           const ctrl=await createBin("purpose-vote-control",{v:1,open:false,options:[]},master);
           const bin=await createBin("purpose-vote-votes",{votes:{}},master);
