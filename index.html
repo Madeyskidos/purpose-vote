@@ -397,6 +397,10 @@ body.participant .ws-title input{pointer-events:none}
 .p-count{font-size:13px;font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .p-count.ok{color:var(--ok)}
 .p-ptext{font-size:15px}
+.list tr.dup td{background:#fbf1ec}
+.p-name{margin-bottom:24px}
+.p-name label{display:block;font-size:18px;font-weight:500;margin-bottom:8px}
+.p-name input{width:100%;font-size:17px;padding:12px 14px}
 .p-sub{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px}
 .rank-ptext{font-size:15px}
 .p-opt{display:flex;gap:14px;align-items:flex-start;width:100%;text-align:left;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:0 0 10px;cursor:pointer}
@@ -498,6 +502,9 @@ const LETTERS="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const inGroup=g=>S.items.filter(i=>i.group===g);
 const codeOf=it=>{const k=inGroup(it.group).indexOf(it);return (it.group==="purpose"?"P":"T")+(k+1);};
 const included=g=>S.items.filter(i=>i.on!==false&&(g==null||i.group===g));
+/* Names: full name required (two words or more). Compared without case, accents or extra spaces. */
+const normName=n=>(n||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+const nameOk=n=>/^\S+(\s+\S+)+$/.test((n||"").trim());
 const pollData=()=>{const P=dataOf("vote");P.status=P.status||"idle";P.votes=P.votes||{};return P;};
 const picksAllowed=g=>{const p=dataOf("options").picks||{};return Math.max(1,Math.min(Math.round(Number(p[g])||3),Math.max(1,included(g).length)));};
 
@@ -583,6 +590,15 @@ function tally(g){
   return {rows,voters:voters.length,total:rows.reduce((s,r)=>s+r.n,0)};
 }
 
+/* One row per vote, oldest first, with picks split per group in the voter's order and duplicate names flagged */
+function voterRows(){
+  const P=pollData(),seen={};
+  const rows=Object.entries(P.votes||{}).map(([id,v])=>({id,name:(v.name||"").trim(),t:v.t||0,
+    picks:Object.fromEntries(GKEYS.map(g=>[g,(v.a||[]).map(itemById).filter(o=>o&&o.group===g)]))})).sort((a,b)=>a.t-b.t);
+  rows.forEach(r=>{const k=normName(r.name);if(k)seen[k]=(seen[k]||0)+1;});
+  rows.forEach(r=>{r.dup=!!(normName(r.name)&&seen[normName(r.name)]>1);});
+  return rows;
+}
 function moveInGroup(id,dir){const it=itemById(id);if(!it)return;const list=inGroup(it.group),o=list[list.indexOf(it)+dir];if(!o)return;const i=S.items.indexOf(it),j=S.items.indexOf(o);S.items[i]=o;S.items[j]=it;}
 
 const TABS=[
@@ -737,8 +753,39 @@ const TABS=[
           </div>`).join(""):`<div class="empty">No ${GROUPS[g].many} yet</div>`}
         </div>`;
       };
-      return `${kpis([{label:"Voters",value:T.voters},{label:"Status",value:status}])}
-        <div class="grid-2">${card("tagline")}${card("purpose")}</div>`;
+      const V=voterRows(),dups=V.filter(v=>v.dup).length;
+      const codes=(v,g)=>{const l=v.picks[g];return l.length?l.map((o,i)=>`<span class="pill outline" title="${esc((i+1)+". "+(o.name||""))}">${codeOf(o)}</span>`).join(" "):`<span class="muted">None</span>`;};
+      const people=`<div class="card edit-only">
+        <div class="row"><h2 style="margin:0">Votes by participant</h2><span class="spacer"></span>
+          <span class="small muted">Hidden in Present mode</span><button class="btn small" data-act="csv"${V.length?"":" disabled"}>Download CSV</button></div>
+        ${dups?`<div class="hint err" style="margin-top:12px">${dups} votes share a name with another vote. Check them and remove the extra one.</div>`:""}
+        <div class="table-scroll" style="margin-top:12px"><table class="list">
+          <thead><tr><th>#</th><th>Name</th><th>Sent</th><th>Taglines, 1st to 3rd</th><th>Purpose statements, 1st to 3rd</th><th></th></tr></thead>
+          <tbody>${V.length?V.map((v,i)=>`<tr${v.dup?' class="dup"':""}>
+            <td>${i+1}</td>
+            <td>${v.name?esc(v.name):`<span class="muted">No name</span>`}${v.dup?` ${pill("Duplicate","clay")}`:""}</td>
+            <td class="small muted" style="white-space:nowrap">${v.t?new Date(v.t).toLocaleTimeString(locale(),{hour:"2-digit",minute:"2-digit"}):"–"}</td>
+            <td>${codes(v,"tagline")}</td><td>${codes(v,"purpose")}</td>
+            <td style="width:1%"><button class="btn ghost small danger" data-act="delvote" data-id="${esc(v.id)}">Remove</button></td></tr>`).join("")
+            :`<tr><td colspan="6" class="empty">No votes yet</td></tr>`}</tbody></table></div>
+      </div>`;
+      return `${kpis([{label:"Voters",value:T.voters},{label:"Unique names",value:new Set(V.map(v=>normName(v.name)).filter(Boolean)).size},{label:"Status",value:status}])}
+        <div class="grid-2">${card("tagline")}${card("purpose")}</div>${people}`;
+    },
+    actions:{
+      csv(){
+        const q=x=>`"${String(x==null?"":x).replace(/"/g,'""')}"`,V=voterRows();
+        const head=["Name","Sent","Duplicate",...GKEYS.flatMap(g=>[1,2,3].map(n=>`${GROUPS[g].title} ${n}`))];
+        const rows=V.map(v=>[v.name,v.t?new Date(v.t).toISOString():"",v.dup?"yes":"",...GKEYS.flatMap(g=>[0,1,2].map(i=>{const o=v.picks[g][i];return o?codeOf(o)+" "+(o.name||""):"";}))]);
+        const blob=new Blob(["\ufeff"+[head,...rows].map(r=>r.map(q).join(",")).join("\r\n")],{type:"text/csv"});
+        const l=document.createElement("a");l.href=URL.createObjectURL(blob);l.download=`votes_by_participant_${new Date().toISOString().slice(0,10)}.csv`;
+        document.body.appendChild(l);l.click();setTimeout(()=>{URL.revokeObjectURL(l.href);l.remove();},400);
+      },
+      delvote(d,b){
+        const id=b.dataset.id,v=(pollData().votes||{})[id];if(!v)return;
+        if(!confirm(`Remove the vote from ${v.name||"this participant"}? This cannot be undone.`))return;
+        return run(async P=>{const rec=await readBin(P.bin,{master:mk()})||{};rec.votes=rec.votes||{};delete rec.votes[id];await writeBin(P.bin,rec,{master:mk()});P.votes=rec.votes;});
+      }
     },
     summary(){return GKEYS.flatMap(g=>[GROUPS[g].title,...tally(g).rows.map(r=>`${r.rank}. ${codeOf(r.o)}  ${r.o.name}: ${r.n} points, ${r.named} ${r.named===1?"pick":"picks"}, ${r.first} first`)]);}
   }
@@ -761,12 +808,12 @@ const PM=(()=>{
   return ADMIN?null:{bad:true,none:true};
 })();
 const PART=!!PM;
-const PS={ctrl:null,view:"loading",picks:[],err:"",busy:false};
+const PS={ctrl:null,view:"loading",picks:[],err:"",busy:false,name:lsGet("pp-name")||""};
 const pOpts=g=>((PS.ctrl&&PS.ctrl.options)||[]).filter(o=>g==null||o.group===g);
 const pMax=g=>Math.min(((PS.ctrl&&PS.ctrl.picks)||{})[g]||3,pOpts(g).length);
 const pChosen=g=>PS.picks.filter(id=>pOpts(g).some(o=>o.id===id)).length;
 /* at least 1 and at most max picks per list. Points follow the order: 1st gets max, 2nd max-1 and so on */
-const pComplete=()=>GKEYS.every(g=>pChosen(g)>=1&&pChosen(g)<=pMax(g));
+const pComplete=()=>nameOk(PS.name)&&GKEYS.every(g=>pChosen(g)>=1&&pChosen(g)<=pMax(g));
 const pNoun=(g,n)=>n===1?GROUPS[g].one:GROUPS[g].many;
 function voterId(){let v=lsGet("pp-voter");if(!v){v=uid("v")+Math.random().toString(36).slice(2,8);lsSet("pp-voter",v);}return v;}
 function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19;}
@@ -783,8 +830,9 @@ function partBoot(){
       lsSet(draftKey(),JSON.stringify(PS.picks));rp();}
     if(a==="submit")partSubmit();
     if(a==="reload")partLoad();
-    if(a==="change"){PS.view="vote";rp();}
   });
+  document.addEventListener("input",e=>{if(!e.target.matches("[data-pn]"))return;PS.name=e.target.value;lsSet("pp-name",PS.name);
+    const s=$(".p-submit");if(s)s.outerHTML=submitHtml();});
   partLoad();
 }
 const P_CTRL=PM&&PM.ctrl,P_BIN=PM&&PM.bin,P_KEY=(PM&&PM.key)||"";
@@ -803,11 +851,11 @@ async function partLoad(){
   rp();
 }
 /* Write my vote with read, write, verify. Up to 6 attempts with a growing random back-off. */
-async function writeMyVote(ans){
+async function writeMyVote(ans,name){
   const me=voterId();
   for(let i=0;i<6;i++){
     const rec=await readBin(P_BIN,{access:P_KEY})||{};
-    rec.votes=rec.votes||{};rec.votes[me]={a:ans,t:Date.now()};
+    rec.votes=rec.votes||{};rec.votes[me]={a:ans,t:Date.now(),name};
     await writeBin(P_BIN,rec,{access:P_KEY});
     const chk=await readBin(P_BIN,{access:P_KEY});                   /* verify the vote landed */
     const mine=chk&&chk.votes&&chk.votes[me];
@@ -818,13 +866,13 @@ async function writeMyVote(ans){
 }
 /* A later write from another phone can still erase a confirmed vote. Re-check twice and repair silently. */
 let healT=[];
-function scheduleHeal(ans){
+function scheduleHeal(ans,name){
   healT.forEach(clearTimeout);
   healT=[5000,15000].map(ms=>setTimeout(async()=>{
     try{
       const c=await readBin(P_CTRL,{access:P_KEY});if(!c.open)return;
       const chk=await readBin(P_BIN,{access:P_KEY});const mine=chk&&chk.votes&&chk.votes[voterId()];
-      if(!mine||JSON.stringify(mine.a)!==JSON.stringify(ans))await writeMyVote(ans);
+      if(!mine||JSON.stringify(mine.a)!==JSON.stringify(ans))await writeMyVote(ans,name);
     }catch(e){}
   },ms+Math.random()*2000));
 }
@@ -834,11 +882,24 @@ async function partSubmit(){
   try{
     const c=await readBin(P_CTRL,{access:P_KEY});PS.ctrl=c;
     if(!c.open){PS.view="waiting";PS.err="The poll is closed.";return;}
+    /* one vote per person: this phone once, and each name once */
+    const cur=(await readBin(P_BIN,{access:P_KEY})||{}).votes||{},me=voterId(),name=PS.name.trim().replace(/\s+/g," ");
+    if(cur[me]){lsSet(sentKey(),String(cur[me].t||Date.now()));PS.view="done";return;}
+    if(Object.entries(cur).some(([id,v])=>id!==me&&normName(v.name)===normName(name)))
+      throw new Error("A vote with this name is already in. Each person can vote once. Talk to the facilitator if this is wrong.");
     const ans=PS.picks.slice();
-    if(!await writeMyVote(ans))throw new Error("Your vote did not save. Tap Send vote again.");
-    lsSet(sentKey(),String(Date.now()));PS.view="done";scheduleHeal(ans);
+    if(!await writeMyVote(ans,name))throw new Error("Your vote did not save. Tap Send vote again.");
+    lsSet(sentKey(),String(Date.now()));PS.view="done";scheduleHeal(ans,name);
   }catch(e){PS.err=e.message||String(e);}
   finally{PS.busy=false;rp();}
+}
+function submitHtml(){
+  const need=GKEYS.filter(g=>pChosen(g)<1),miss=[];
+  if(!nameOk(PS.name))miss.push("write your full name");
+  if(need.length)miss.push("pick at least one "+need.map(g=>GROUPS[g].one).join(" and one "));
+  const msg=miss.length?miss.join(" and ")+" to send":"Ready to send";
+  return `<div class="p-submit"><span class="muted small">${msg.charAt(0).toUpperCase()+msg.slice(1)}</span>
+    <button class="btn primary" data-pa="submit"${miss.length||PS.busy?" disabled":""}>${PS.busy?"Sending":"Send vote"}</button></div>`;
 }
 function rp(){
   const page=$("#page"),c=PS.ctrl;
@@ -850,17 +911,15 @@ function rp(){
   else if(PS.view==="waiting")h=`${err}<div class="card p-msg"><h2>${lsGet(sentKey())?"Thanks for voting":"The poll is not open"}</h2><p class="muted">Wait for the facilitator, then tap below.</p><button class="btn primary" data-pa="reload">Check again</button></div>`;
   else if(PS.view==="done")h=c&&!c.open
     ?`<div class="card p-msg"><h2>Thanks, your vote is in</h2><p class="muted">The poll is closed.</p><button class="btn ghost" data-pa="reload">Refresh</button></div>`
-    :`<div class="card p-msg"><h2>Thanks, your vote is in</h2><p class="muted">You can change it while the poll is open.</p><div class="row" style="justify-content:center"><button class="btn" data-pa="change">Change my vote</button><button class="btn ghost" data-pa="reload">Refresh</button></div></div>`;
+    :`<div class="card p-msg"><h2>Thanks, your vote is in</h2><p class="muted">Each person votes once, so you are done.</p></div>`;
   else{
     /* order differs per phone to avoid position bias */
     const sec=g=>{const opts=shuffled(pOpts(g),voterId()+P_BIN+g),max=pMax(g),n=pChosen(g);if(!opts.length)return "";
       return `<div class="p-sec"><div class="p-lead"><span>Pick 1 to ${max} ${GROUPS[g].many}<span class="p-sub">Tap in order. Your first tap is your favourite</span></span><span class="p-count${n>=1?" ok":""}">${n} of ${max}</span></div>
         ${opts.map(o=>{const on=PS.picks.includes(o.id);return `<button class="p-opt${on?" on":""}" data-pa="pick" data-id="${esc(o.id)}" aria-pressed="${on}">
           <span class="p-check">${on?PS.picks.filter(x=>pOpts(g).some(p=>p.id===x)).indexOf(o.id)+1:""}</span><span class="p-text"><span class="${g==="tagline"?"p-tag":"p-ptext"}">${esc(o.text||"Option "+o.code)}</span></span></button>`;}).join("")}</div>`;};
-    const need=GKEYS.filter(g=>pChosen(g)<1);
-    h=`${err}${GKEYS.map(sec).join("")}
-      <div class="p-submit"><span class="muted small">${need.length?"Pick at least one "+need.map(g=>GROUPS[g].one).join(" and one ")+" to send":"Ready to send"}</span>
-        <button class="btn primary" data-pa="submit"${need.length||PS.busy?" disabled":""}>${PS.busy?"Sending":"Send vote"}</button></div>`;
+    h=`${err}<div class="p-name"><label for="pName">Your full name</label><input id="pName" data-pn autocomplete="name" placeholder="First and last name" value="${esc(PS.name)}"></div>
+      ${GKEYS.map(sec).join("")}${submitHtml()}`;
   }
   page.innerHTML=`<div class="p-wrap">${h}</div>`;
 }
